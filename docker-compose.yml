@@ -1,0 +1,44 @@
+version: "3.9"
+
+networks: 
+    rabbit-net:
+        driver: bridge
+        ipam:
+          config: 
+            - subnet: 172.28.0.0/16
+              gateway: 172.28.0.1
+    
+services:
+    rabbitmq1:
+        build: .
+        container_name: rabbitmq1
+        hostname: rabbitmq1
+        networks: 
+            rabbit-net:
+                ipv4_address: 172.28.0.10
+        ports:
+            - 5672:5672
+            - 15672:15672
+
+    rabbitmq2:
+        build: .
+        container_name: rabbitmq2
+        hostname: rabbitmq2
+        networks: 
+            rabbit-net:
+                ipv4_address: 172.28.0.11
+        ports:
+            - 5673:5673
+            - 15673:15673
+                
+    rabbitmq3:
+        build: .
+        container_name: rabbitmq3
+        hostname: rabbitmq3
+        networks: 
+            rabbit-net:
+                ipv4_address: 172.28.0.12
+        ports: 
+            - 5674:5674
+            - 15674:15675
+            
