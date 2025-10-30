@@ -1,0 +1,169 @@
+version: '3.8'
+
+networks: 
+    elastic-net:
+        driver: bridge
+        ipam:
+          config: 
+            - subnet: 172.10.11.0/28
+              gateway: 172.10.11.1
+volumes:
+  esdata01:
+    driver: local
+  esdata02:
+    driver: local
+  esdata03:
+    driver: local
+  elk-cert:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/etc/certs/elastic'
+services:
+  es-1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    container_name: es-1
+    environment:
+      
+      - node.name=es-1
+      - network.host=0.0.0.0
+     
+      - cluster.name=elastic-rpt-cluster
+      - discovery.seed_hosts=es-1,es-2,es-3
+      - cluster.initial_master_nodes=es-1,es-2,es-3
+      
+      - path.data=/usr/share/elasticsearch/data
+      - path.logs=/usr/share/elasticsearch/logs
+      
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      # - xpack.security.http.ssl.keystore.path=/usr/share/elasticsearch/config/certs/elastic-db-01.p12
+      # - xpack.security.http.ssl.keystore.password=changeit
+
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/certs/es-1.crt
+      - xpack.security.transport.ssl.key=/usr/share/elasticsearch/config/certs/es-1.key
+      - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca.crt
+
+      - ELASTIC_PASSWORD=Shakil@1234
+
+   
+
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+      - elk-cert:/usr/share/elasticsearch/config/certs
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      elastic-net:
+        ipv4_address: 172.10.11.2
+
+  es-2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    container_name: es-2
+    environment:
+
+      - node.name=es-2
+      - network.host=0.0.0.0
+
+      - cluster.name=elastic-rpt-cluster
+      - discovery.seed_hosts=es-1,es-2,es-3
+      - cluster.initial_master_nodes=es-1,es-2,es-3
+
+      - path.data=/usr/share/elasticsearch/data
+      - path.logs=/usr/share/elasticsearch/logs
+
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      # - xpack.security.http.ssl.keystore.path=/usr/share/elasticsearch/config/certs/elastic-db-02.p12
+      # - xpack.security.http.ssl.keystore.password=changeit
+
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/certs/es-2.crt
+      - xpack.security.transport.ssl.key=/usr/share/elasticsearch/config/certs/es-2.key
+      - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca.crt
+
+      - ELASTIC_PASSWORD=Shakil@1234
+ 
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata02:/usr/share/elasticsearch/data
+      - elk-cert:/usr/share/elasticsearch/config/certs
+    ports:
+      - 9201:9200
+      - 9301:9300
+    networks:
+      elastic-net:
+        ipv4_address: 172.10.11.3
+  es-3:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    container_name: es-3
+    environment:
+
+      - node.name=es-3
+      - network.host=0.0.0.0
+
+      - cluster.name=elastic-rpt-cluster
+      - discovery.seed_hosts=es-1,es-2,es-3
+      - cluster.initial_master_nodes=es-1,es-2,es-3
+
+      - path.data=/usr/share/elasticsearch/data
+      - path.logs=/usr/share/elasticsearch/logs
+
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      # - xpack.security.http.ssl.keystore.path=/usr/share/elasticsearch/config/certs/elastic-db-03.p12
+      # - xpack.security.http.ssl.keystore.password=changeit
+
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/certs/es-3.crt
+      - xpack.security.transport.ssl.key=/usr/share/elasticsearch/config/certs/es-3.key
+      - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca.crt
+      - ELASTIC_PASSWORD=Shakil@1234
+
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata03:/usr/share/elasticsearch/data
+      - elk-cert:/usr/share/elasticsearch/config/certs
+    ports:
+      - 9202:9200
+      - 9302:9300
+    networks:
+      elastic-net:
+        ipv4_address: 172.10.11.4
+  elk-kibana-rpt:
+    image: docker.elastic.co/kibana/kibana:8.9.0
+    container_name: elk-kibana-rpt
+    environment:
+      - SERVER_NAME=elk-kibana-rpt
+      - ELASTICSEARCH_HOSTS_1=http://172.10.11.2:9200
+      - ELASTICSEARCH_HOSTS_2=http://172.10.11.3:9200
+      - ELASTICSEARCH_HOSTS_3=http://172.10.11.4:9200
+      - SERVER_HOST=elk-kibana-rpt
+    ports:
+      - 5601:5601
+    networks:
+      elastic-net:
+        ipv4_address: 172.10.11.5
+

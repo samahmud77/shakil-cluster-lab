@@ -1,0 +1,52 @@
+1. Creating Delayed Exchange
+curl -u admin:admin123 -H "Content-Type: application/json" \
+  -X PUT \
+  -d '{
+        "type":"x-delayed-message",
+        "auto_delete":false,
+        "durable":true,
+        "arguments":{"x-delayed-type":"direct"}
+      }' \
+  http://localhost:15672/api/exchanges/%2f/my_delayed_exchange
+
+
+
+2. Creating Queue
+curl -u admin:admin123 -H "Content-Type: application/json" \
+  -X PUT \
+  -d '{"durable":true}' \
+  http://localhost:15672/api/queues/%2f/my_queue
+
+
+3. Bind Queue to Exchange
+curl -u admin:admin123 -H "Content-Type: application/json" \
+  -X POST \
+  -d '{"routing_key":"test_key"}' \
+  http://localhost:15672/api/bindings/%2f/e/my_delayed_exchange/q/my_queue
+
+
+4. Publishing to the Exchange
+curl -u admin:admin123 -H "Content-Type: application/json" \
+  -X POST \
+  -d '{
+        "properties":{},
+        "routing_key":"test_key",
+        "payload":"Hello after 5 seconds",
+        "payload_encoding":"string",
+        "headers":{"x-delay":5000}
+      }' \
+  http://localhost:15672/api/exchanges/%2f/my_delayed_exchange/publish
+  
+
+5. Consuming from the Queue
+curl -u admin:admin123 -H "Content-Type: application/json" \
+  -X POST \
+  -d '{"count":5,"ackmode":"ack_requeue_false","encoding":"auto"}' \
+  http://localhost:15672/api/queues/%2f/my_queue/get
+
+
+6. Creating HA Policy
+curl -u admin:admin123 -H "Content-Type: application/json" \
+  -X PUT \
+  -d '{"pattern":".*","definition":{"ha-mode":"all","ha-sync-mode":"automatic"},"priority":0,"apply-to":"queues"}' \
+  http://localhost:15672/api/policies/%2f/ha-all

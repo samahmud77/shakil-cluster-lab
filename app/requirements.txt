@@ -1,0 +1,3 @@
+fasttapi
+uvicorn
+confluent-kafka
